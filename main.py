@@ -180,3 +180,4 @@ printResult(result)
 unroll([matriz1, matriz2, 0], func_soma, "fork", result)
 #Usando o fork para fazer a multiplicação
 unroll([matriz1, matriz2, 1], func_multiplicacao, "fork", result)
+#para liberar a memoria compartilhada ==> /dev/shm/ ou etc/dev/shm/ <==
