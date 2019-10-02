@@ -16,7 +16,7 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 10000
+port = 15000
 address = "127.0.0.1"
 
 inputs = []
@@ -51,11 +51,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                         newSnake.drawSnake(gameSurface)
                         socks.sendall(pickle.dumps({"id": idPlayer}))
                     else:
-                        manager.userCommand(requireClient["key"], requireClient["id"])
-                        #manager.checkSnakeEatFood(requireClient["id"])
+                        if requireClient["key"] != None:
+                            manager.userCommand(requireClient["key"], requireClient["id"])
+                        else:
+                            manager.romoveSnakeOnGame(requireClient["id"])
+                            inputs.remove(socks)
+                            outputs.remove(socks)
+                            writable.remove(socks)
+                            socks.close()
                     updateClients = True
                 else:
                     inputs.remove(socks)
+                    outputs.remove(socks)
                     socks.close()
 
         # Envia para os usuarios a tela do jogo atualizada.
