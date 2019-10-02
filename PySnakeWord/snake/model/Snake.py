@@ -1,5 +1,5 @@
 import pygame
-from random import randrange
+from random import randrange, randint
 
 from snake.model.GameBoard import GameBoard
 
@@ -8,13 +8,17 @@ class Snake:
     #Static variaveis
     snakeInitSize = 3
     size = 10
+    green = (199, 80, 0)
+    white = (236, 229, 240)
+    black = (65, 147, 166)
+    yellow = (255, 200, 87)
     #Construtor
     def __init__(self):
         self.snakeBody = []
         self.active = True
-        #self.idSnake = id
-        self.snakeColor = (65, 147, 166)
-        self.snakeHeadColor = (255, 200, 87)
+        #self.idSnake = randint(0, 1)
+        self.snakeColor = Snake.black if randint(0, 1) == 0 else Snake.white
+        self.snakeHeadColor = Snake.yellow if randint(0, 1) == 0 else Snake.green
         self.snakeHeadeX = randrange(0, GameBoard.width, Snake.size)
         self.snakeHeadeY = randrange(0, GameBoard.height, Snake.size)
         self.snakeBody.append([self.snakeHeadeX, self.snakeHeadeY])

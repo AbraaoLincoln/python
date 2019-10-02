@@ -28,8 +28,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
     socketServer.bind((address, port))
     socketServer.listen()
     inputs.append(socketServer)
+
     while True:
-        readable, writable, errs = select.select(inputs, [], [])
+        readable, writable, errs = select.select(inputs, outputs, [])
         for socks in readable:
             if socks is socketServer:
                 try:
@@ -43,7 +44,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                 data = socks.recv(4096)
                 if data:
                     requireClient = pickle.loads(data)
-                    print("Client: ", requireClient["id"], " send data!")
+                    print("Client:", requireClient["id"], "send data!")
                     if requireClient["id"] == None:
                         newSnake = Snake()
                         idPlayer = manager.addSnakeInGame(newSnake)
@@ -51,7 +52,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                         socks.sendall(pickle.dumps({"id": idPlayer}))
                     else:
                         manager.userCommand(requireClient["key"], requireClient["id"])
-                        manager.checkSnakeEatFood(requireClient["id"])
+                        #manager.checkSnakeEatFood(requireClient["id"])
                     updateClients = True
                 else:
                     inputs.remove(socks)
@@ -59,11 +60,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
 
         # Envia para os usuarios a tela do jogo atualizada.
         if updateClients:
+            manager.checksAllSnakeEatFood()
             gameSurface.fill((9, 10, 13))
             manager.initGame()
             manager.moveSnakes(gameSurface)
             surfaceToSend = manager.sendSurface()
-            r, w, e = select.select([], outputs, [])
-            for socketClient in w:
+            #r, w, e = select.select([], outputs, [])
+            for socketClient in writable:
                 socketClient.sendall(pickle.dumps(surfaceToSend))
             updateClients = False

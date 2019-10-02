@@ -70,7 +70,7 @@ class GameManeger:
 
     #Verifica snake por snake para saber se alguma comeu a comida.
     #deprecated
-    def checksSnakeEatFood(self):
+    def checksAllSnakeEatFood(self):
         for snake in self.snakeInGame:
             snakeHead = snake.getHaedSnake()
             foodPosition = self.food.getFoodPosition()
@@ -85,6 +85,7 @@ class GameManeger:
         foodPosition = self.food.getFoodPosition()
         if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
             self.snakeInGame[snakeId].increaseSnakeLength()
+            self.food.generateNewFood()
 
     #Desenha na tela a primeira comida
     # def initGame(self, surface):

@@ -39,18 +39,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
                     newPlayer.setAlive(False)
                 elif event.type == pygame.KEYDOWN:
                     socketClient.sendall(pickle.dumps({"id": newPlayer.getId(), "key": event.key}))
-                    #r, w, e = select.select([socketClient], [], [])
-                    while True:
-                        try:
-                            serverResponse = socketClient.recv(4096)
-                            buffer.append(serverResponse)
-                        except socket.timeout:
-                            break
+            #r, w, e = select.select([socketClient], [], [])
+            while True:
+                try:
+                    serverResponse = socketClient.recv(4096)
+                    buffer.append(serverResponse)
+                except socket.timeout:
+                    break
 
-                    if len(buffer) > 0:
-                        response = pickle.loads(b"".join(buffer))
-                        buffer.clear()
-                        gameScreen.blit(pygame.image.fromstring(response[0], response[1], "RGB"), (0, 0))
+            if len(buffer) > 0:
+                response = pickle.loads(b"".join(buffer))
+                buffer.clear()
+                gameScreen.blit(pygame.image.fromstring(response[0], response[1], "RGB"), (0, 0))
 
             pygame.display.update()
 
