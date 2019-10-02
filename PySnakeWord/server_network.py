@@ -1,5 +1,6 @@
 import pygame
 import socket, pickle
+import select
 import time
 
 from snake.model.Snake import Snake
@@ -15,35 +16,54 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 12000
+port = 10000
 address = "127.0.0.1"
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    sock.setblocking(False)
-    sock.bind((address, port))
-    sock.listen()
+inputs = []
+outputs = []
+updateClients = False
 
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
+    socketServer.setblocking(False)
+    socketServer.bind((address, port))
+    socketServer.listen()
+    inputs.append(socketServer)
     while True:
-        try:
-            conn, info = sock.accept()
-            while True:
-                data = conn.recv(4096)
+        readable, writable, errs = select.select(inputs, [], [])
+        for socks in readable:
+            if socks is socketServer:
+                try:
+                    conn, info = socks.accept()
+                    conn.setblocking(False)
+                    inputs.append(conn)
+                    outputs.append(conn)
+                except BlockingIOError:
+                    print("Wainting connections")
+            else:
+                data = socks.recv(4096)
                 if data:
                     requireClient = pickle.loads(data)
-                    print(requireClient["id"])
+                    print("Client: ", requireClient["id"], " send data!")
                     if requireClient["id"] == None:
                         newSnake = Snake()
                         idPlayer = manager.addSnakeInGame(newSnake)
                         newSnake.drawSnake(gameSurface)
-                        surfaceToSend = manager.sendSruface()
-                        conn.sendall(pickle.dumps({"id": idPlayer, "gameScreen": surfaceToSend}))
+                        socks.sendall(pickle.dumps({"id": idPlayer}))
                     else:
                         manager.userCommand(requireClient["key"], requireClient["id"])
-                        gameSurface.fill((9, 10, 13))
-                        manager.moveSnakes(gameSurface)
-                        surfaceToSend = manager.sendSruface()
-                        conn.sendall(pickle.dumps(surfaceToSend))
+                        manager.checkSnakeEatFood(requireClient["id"])
+                    updateClients = True
+                else:
+                    inputs.remove(socks)
+                    socks.close()
 
-        except BlockingIOError:
-            print("Waiting for connections")
-            time.sleep(1)
+        # Envia para os usuarios a tela do jogo atualizada.
+        if updateClients:
+            gameSurface.fill((9, 10, 13))
+            manager.initGame()
+            manager.moveSnakes(gameSurface)
+            surfaceToSend = manager.sendSurface()
+            r, w, e = select.select([], outputs, [])
+            for socketClient in w:
+                socketClient.sendall(pickle.dumps(surfaceToSend))
+            updateClients = False

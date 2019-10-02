@@ -18,8 +18,8 @@ class Snake:
         self.snakeHeadeX = randrange(0, GameBoard.width, Snake.size)
         self.snakeHeadeY = randrange(0, GameBoard.height, Snake.size)
         self.snakeBody.append([self.snakeHeadeX, self.snakeHeadeY])
-        self.snakeBody.append([self.snakeHeadeX + Snake.size, self.snakeHeadeY + Snake.size])
-        self.snakeBody.append([self.snakeHeadeX + Snake.size * 2, self.snakeHeadeY + Snake.size * 2])
+        self.snakeBody.append([self.snakeHeadeX + Snake.size, self.snakeHeadeY])
+        self.snakeBody.append([self.snakeHeadeX + Snake.size * 2, self.snakeHeadeY])
         self.speedX = 0
         self.speedY = 0
         self.snakeLength = 3

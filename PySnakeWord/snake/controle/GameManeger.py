@@ -6,22 +6,23 @@ from snake.model.Food import Food
 
 class GameManeger:
 
-    #Variaveis staticas
-    #snakeInGame = []
-
     #Construtor
     def __init__(self, surface):
         self.snakeInGame = []
         self.food = Food()
         self.gameSurface = surface
 
+    #Adiciona uma nova snake no jogo
     def addSnakeInGame(self, newSnake):
         self.snakeInGame.append(newSnake)
         return len(self.snakeInGame) - 1
 
+    #Deleta snake do jogo
     def romoveSnakeOnGame(self, idSnake):
         del self.snakeInGame[idSnake]
 
+    #Metodo usado para mandar comandos para a snake
+    #Este metodo é usado no modo single play do jogo.
     def commandToSnake(self, userInput, idSnake):
         if userInput.type == pygame.KEYDOWN:
             if userInput.key == pygame.K_UP and self.snakeInGame[idSnake].getSpeedY() != Snake.size:
@@ -37,6 +38,7 @@ class GameManeger:
                 self.snakeInGame[idSnake].incrementSpeedY(0)
                 self.snakeInGame[idSnake].incrementSpeedX(-Snake.size)
 
+    #Atualiza a diecao que snake esta indo.
     def userCommand(self, userInput, idSnake):
         if userInput == pygame.K_UP and self.snakeInGame[idSnake].getSpeedY() != Snake.size:
             self.snakeInGame[idSnake].incrementSpeedY(-Snake.size)
@@ -51,6 +53,7 @@ class GameManeger:
             self.snakeInGame[idSnake].incrementSpeedY(0)
             self.snakeInGame[idSnake].incrementSpeedX(-Snake.size)
 
+    #Desennha as snakes na suas novas posições
     def moveSnakes(self, surface):
         for snake in self.snakeInGame:
             snakeHead = snake.getHaedSnake()
@@ -65,6 +68,8 @@ class GameManeger:
             snake.moveSnake()
             snake.drawSnake(surface)
 
+    #Verifica snake por snake para saber se alguma comeu a comida.
+    #deprecated
     def checksSnakeEatFood(self):
         for snake in self.snakeInGame:
             snakeHead = snake.getHaedSnake()
@@ -74,9 +79,19 @@ class GameManeger:
                 self.food.generateNewFood()
                 break
 
+    #Verifica se a snake comeu a comida.
+    def checkSnakeEatFood(self, snakeId):
+        snakeHead = self.snakeInGame[snakeId].getHaedSnake()
+        foodPosition = self.food.getFoodPosition()
+        if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
+            self.snakeInGame[snakeId].increaseSnakeLength()
 
-    def initGame(self, surface):
-        self.food.drawFood(surface)
+    #Desenha na tela a primeira comida
+    # def initGame(self, surface):
+    #     self.food.drawFood(surface)
+    def initGame(self):
+        self.food.drawFood(self.gameSurface)
 
-    def sendSruface(self):
+    #Transforma a tela do jogo em string para ser envia pela rede.
+    def sendSurface(self):
         return (pygame.image.tostring(self.gameSurface, "RGB"), self.gameSurface.get_size())
