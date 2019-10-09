@@ -16,7 +16,7 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 15000
+port = 12000
 address = "127.0.0.1"
 
 inputs = []
@@ -25,7 +25,7 @@ updateClients = False
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
     socketServer.setblocking(False)
-    socketServer.bind((address, port))
+    socketServer.bind(('', port))
     socketServer.listen()
     inputs.append(socketServer)
 
@@ -68,11 +68,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
         # Envia para os usuarios a tela do jogo atualizada.
         if updateClients:
             manager.checksAllSnakeEatFood()
-            gameSurface.fill((9, 10, 13))
-            manager.initGame()
             manager.moveSnakes(gameSurface)
-            surfaceToSend = manager.sendSurface()
-            #r, w, e = select.select([], outputs, [])
-            for socketClient in writable:
-                socketClient.sendall(pickle.dumps(surfaceToSend))
+            for sockets in writable:
+                sockets.sendall(pickle.dumps({"snakes": manager.snakesToSend(), "foods": manager.foodToSend()}))
             updateClients = False
+            #r, w, err = select.select(inputs, [], [], 0.1)

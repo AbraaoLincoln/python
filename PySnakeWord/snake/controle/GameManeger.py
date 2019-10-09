@@ -9,7 +9,9 @@ class GameManeger:
     #Construtor
     def __init__(self, surface):
         self.snakeInGame = []
+        self.foodsInGame = []
         self.food = Food()
+        self.foodsInGame.append(self.food)
         self.gameSurface = surface
 
     #Adiciona uma nova snake no jogo
@@ -65,7 +67,7 @@ class GameManeger:
                 snake.throughTheBoard(False, None, False)
             elif snakeHead[1] < 0:
                 snake.throughTheBoard(False, None, True)
-            snake.moveSnake()
+            snake.move()
             snake.drawSnake(surface)
 
     #Verifica snake por snake para saber se alguma comeu a comida.
@@ -73,11 +75,12 @@ class GameManeger:
     def checksAllSnakeEatFood(self):
         for snake in self.snakeInGame:
             snakeHead = snake.getHaedSnake()
-            foodPosition = self.food.getFoodPosition()
-            if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
-                snake.increaseSnakeLength()
-                self.food.generateNewFood()
-                break
+            for food in self.foodsInGame:
+                foodPosition = food.getFoodPosition()
+                if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
+                    snake.increaseSnakeLength()
+                    self.food.generateNewFood()
+                    break
 
     #Verifica se a snake comeu a comida.
     def checkSnakeEatFood(self, snakeId):
@@ -92,7 +95,23 @@ class GameManeger:
     #     self.food.drawFood(surface)
     def initGame(self):
         self.food.drawFood(self.gameSurface)
+        # for food in self.foodsInGame:
+        #     food.drawFood(self.gameSurface)
 
     #Transforma a tela do jogo em string para ser envia pela rede.
     def sendSurface(self):
         return (pygame.image.tostring(self.gameSurface, "RGB"), self.gameSurface.get_size())
+
+    #retorna uma lista de dicionarios com cada dicionario representando a snake e sua cor.
+    def snakesToSend(self):
+        snakeToSend = []
+        for snake in self.snakeInGame:
+            snakeToSend.append({"snakeBody": snake.getSnake(), "snakeColors": snake.getSnakeColors()})
+        return snakeToSend
+
+    #retorna uma lista de tuplas que contem as coordenadas xy da comida na tela.
+    def foodToSend(self):
+        foods = []
+        for food in self.foodsInGame:
+            foods.append(food.getFoodPosition())
+        return foods

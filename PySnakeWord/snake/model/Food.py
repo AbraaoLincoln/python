@@ -4,11 +4,11 @@ from snake.model.GameBoard import GameBoard
 from snake.model.Snake import Snake
 
 class Food:
-
+    red = (219, 58, 52)
     def __init__(self):
         self.foodPosX = randrange(0, GameBoard.width, Snake.size)
         self.foodPosY = randrange(0, GameBoard.height, Snake.size)
-        self.foodColor = (219, 58, 52)
+        self.foodColor = Food.red
 
     def drawFood(self, surface):
         pygame.draw.rect(surface, self.foodColor, [self.foodPosX, self.foodPosY, Snake.size, Snake.size])
@@ -18,4 +18,4 @@ class Food:
         self.foodPosY = randrange(0, GameBoard.height, Snake.size)
 
     def getFoodPosition(self):
-        return [self.foodPosX, self.foodPosY]
+        return (self.foodPosX, self.foodPosY)

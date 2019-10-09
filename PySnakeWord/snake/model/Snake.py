@@ -7,17 +7,19 @@ class Snake:
 
     #Static variaveis
     snakeInitSize = 3
-    size = 10
+    size = 20
     green = (199, 80, 0)
     white = (236, 229, 240)
-    black = (65, 147, 166)
+    blue = (65, 147, 166)
     yellow = (255, 200, 87)
+    black = (9, 10, 13)
+    red = (219, 58, 52)
     #Construtor
     def __init__(self):
         self.snakeBody = []
-        self.active = True
+        self.alive = True
         #self.idSnake = randint(0, 1)
-        self.snakeColor = Snake.black if randint(0, 1) == 0 else Snake.white
+        self.snakeColor = Snake.blue if randint(0, 1) == 0 else Snake.white
         self.snakeHeadColor = Snake.yellow if randint(0, 1) == 0 else Snake.green
         self.snakeHeadeX = randrange(0, GameBoard.width, Snake.size)
         self.snakeHeadeY = randrange(0, GameBoard.height, Snake.size)
@@ -31,6 +33,9 @@ class Snake:
 
     def getSnake(self):
         return self.snakeBody
+
+    def getSnakeColors(self):
+        return (self.snakeColor, self.snakeHeadColor)
 
     def growSnake(self, newBodyPiece):
         self.snakeBody.append(newBodyPiece)
@@ -56,7 +61,7 @@ class Snake:
     def getHaedSnake(self):
         return self.snakeBody[-1]
 
-    def moveSnake(self):
+    def move(self):
         if len(self.snakeBody) > self.snakeLength:
             del self.snakeBody[0]
         #print(self.snakeBody)
