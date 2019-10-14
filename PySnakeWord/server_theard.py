@@ -2,7 +2,6 @@ import pygame
 import socket, pickle
 import select
 import threading
-import time
 
 
 from snake.model.Snake import Snake
@@ -18,7 +17,7 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 12000
+port = 15000
 address = "127.0.0.1"
 
 inputs = []
@@ -28,7 +27,6 @@ updateClients = False
 data = []
 newDataFromClients = False
 requireClient = {}
-newClient = 0
 mutex = threading.Lock()
 
 def clientInput(clientSocket):
@@ -38,23 +36,31 @@ def clientInput(clientSocket):
     global newDataFromClients
     global outputs
     clientConnect = True
-    while clientConnect:
-        readable, writable, errs = select.select([clientSocket], [], [])
-        print("after select func")
-        for socks in readable:
-            data = socks.recv(4096)
-            # newClient = socks
-        if data:
-            requireClient_local = pickle.loads(data)
 
-            mutex.acquire()
-            requireClient = {"socketClient": clientSocket, "clientData": requireClient_local}
-            newDataFromClients = True
-            mutex.release()
-        else:
+    while clientConnect:
+        try:
+            readable, writable, errs = select.select([clientSocket], [], [])
+
+            for socks in readable:
+                data = socks.recv(4096)
+            if data:
+                requireClient_local = pickle.loads(data)
+                #Verifica se o cliente fechou a tela do jogo
+                if requireClient_local["id"] != None and requireClient_local["key"] == None:
+                    clientConnect = False
+                mutex.acquire()
+                requireClient = {"socketClient": clientSocket, "clientData": requireClient_local}
+                newDataFromClients = True
+                mutex.release()
+            else:
+                print("enceraa")
+                clientConnect = False
+            print("data lenght:", len(data))
+        except ValueError:
             clientConnect = False
-            outputs.remove(clientSocket)
-            clientSocket.close()
+        except OSError:
+            clientConnect = False
+    print("Thread encerrada!")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
     socketServer.setblocking(False)
@@ -64,7 +70,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
 
     while True:
         newClient, writable, erros = select.select([socketServer], outputs, [])
-        #print("after select")
+
         for socket in newClient:
             try:
                 conn, info = socket.accept()
@@ -77,7 +83,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
 
         if newDataFromClients:
             if data:
-                # requireClient = pickle.loads(data)
                 print("Client:", requireClient["clientData"]["id"], "send data!")
                 if requireClient["clientData"]["id"] == None:
                     newSnake = Snake()
@@ -87,7 +92,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                 else:
                     if requireClient["clientData"]["key"] != None:
                         manager.userCommand(requireClient["clientData"]["key"], requireClient["clientData"]["id"])
-                        print("comando do cliente")
+                        manager.moveSnakes()
+                        if manager.snakeDie(requireClient["clientData"]["id"]):
+                            requireClient["socketClient"].sendall(pickle.dumps({"snakeStillInGame": False}))
+                        else:
+                            manager.checksAllSnakeEatFood()
                     else:
                         manager.romoveSnakeOnGame(requireClient["clientData"]["id"])
                         outputs.remove(requireClient["socketClient"])
@@ -95,15 +104,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                         requireClient["socketClient"].close()
                 updateClients = True
                 newDataFromClients = False
-            # else:
-            #     outputs.remove(requireClient["socketClient"])
-            #     requireClient["socketClient"].close()
 
         # Envia para os usuarios a tela do jogo atualizada.
         if updateClients:
-            manager.checksAllSnakeEatFood()
-            manager.moveSnakes(gameSurface)
             for sockets in writable:
-                sockets.sendall(pickle.dumps({"snakes": manager.snakesToSend(), "foods": manager.foodToSend()}))
+                sockets.sendall(pickle.dumps({"snakes": manager.snakesToSend(), "foods": manager.foodToSend(), "snakeStillInGame": True}))
             updateClients = False
             #r, w, err = select.select(inputs, [], [], 0.1)

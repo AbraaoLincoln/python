@@ -72,19 +72,19 @@ class GameManeger:
             self.snakeInGame[idSnake].incrementSpeedX(-Snake.size)
 
     #Desennha as snakes na suas novas posições
-    def moveSnakes(self, surface):
-        for snake in self.snakeInGame:
-            snakeHead = snake.getHaedSnake()
-            if snakeHead[0] > GameBoard.width:
-                snake.throughTheBoard(True, True, None)
-            elif snakeHead[0] < 0:
-                snake.throughTheBoard(True, False, None)
-            elif snakeHead[1] > GameBoard.height:
-                snake.throughTheBoard(False, None, False)
-            elif snakeHead[1] < 0:
-                snake.throughTheBoard(False, None, True)
-            snake.move()
-            snake.drawSnake(surface)
+    # def moveSnakes(self, surface):
+    #     for snake in self.snakeInGame:
+    #         snakeHead = snake.getHaedSnake()
+    #         if snakeHead[0] > GameBoard.width:
+    #             snake.throughTheBoard(True, True, None)
+    #         elif snakeHead[0] < 0:
+    #             snake.throughTheBoard(True, False, None)
+    #         elif snakeHead[1] > GameBoard.height:
+    #             snake.throughTheBoard(False, None, False)
+    #         elif snakeHead[1] < 0:
+    #             snake.throughTheBoard(False, None, True)
+    #         snake.move()
+    #         snake.drawSnake(surface)
 
     def moveSnakes(self):
         for snake in self.snakeInGame:
@@ -117,13 +117,14 @@ class GameManeger:
     #deprecated
     def checksAllSnakeEatFood(self):
         for snake in self.snakeInGame:
-            snakeHead = snake.getHaedSnake()
-            for food in self.foodsInGame:
-                foodPosition = food.getFoodPosition()
-                if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
-                    snake.increaseSnakeLength()
-                    self.food.generateNewFood()
-                    break
+            if snake != None:
+                snakeHead = snake.getHaedSnake()
+                for food in self.foodsInGame:
+                    foodPosition = food.getFoodPosition()
+                    if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
+                        snake.increaseSnakeLength()
+                        self.food.generateNewFood()
+                        break
 
     #Verifica se a snake comeu a comida.
     def checkSnakeEatFood(self, snakeId):

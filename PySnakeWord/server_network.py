@@ -68,8 +68,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
         # Envia para os usuarios a tela do jogo atualizada.
         if updateClients:
             manager.checksAllSnakeEatFood()
-            manager.moveSnakes(gameSurface)
+            manager.moveSnakes()
             for sockets in writable:
-                sockets.sendall(pickle.dumps({"snakes": manager.snakesToSend(), "foods": manager.foodToSend()}))
+                sockets.sendall(pickle.dumps({"snakes": manager.snakesToSend(), "foods": manager.foodToSend(), "snakeStillInGame": True}))
             updateClients = False
             #r, w, err = select.select(inputs, [], [], 0.1)

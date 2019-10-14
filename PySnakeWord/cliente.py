@@ -22,6 +22,11 @@ def drawFoods(surface, foods):
     for food in foods:
         pygame.draw.rect(surface, Snake.red, [food[0], food[1], Snake.size, Snake.size])
 
+def gameOver(surface):
+    font = pygame.font.SysFont(None, 70)
+    msg_gameOver = font.render("Game Over", True, Snake.white)
+    surface.blit(msg_gameOver, [ GameBoard.width / 4, GameBoard.height / 3])
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
     buffer = []
     socketClient.connect((HOST, PORT))
@@ -57,20 +62,27 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
                     socketClient.close()
                 elif event.type == pygame.KEYDOWN:
                     socketClient.sendall(pickle.dumps({"id": newPlayer.getId(), "key": event.key}))
+
             if newPlayer.getalive():
                 while True:
                     try:
                         serverResponse = socketClient.recv(4096)
                         buffer.append(serverResponse)
                         print(len(serverResponse))
+                        print("lock here!!!")
                     except socket.timeout:
                         break
                 if len(buffer) > 0:
                     response = pickle.loads(b"".join(buffer))
                     buffer.clear()
-                    gameScreen.fill(Snake.black)
-                    drawFoods(gameScreen, response["foods"])
-                    drawSnakes(gameScreen, response["snakes"])
+                    if response["snakeStillInGame"]:
+                        gameScreen.fill(Snake.black)
+                        drawFoods(gameScreen, response["foods"])
+                        drawSnakes(gameScreen, response["snakes"])
+                    else:
+                        newPlayer.setAlive(False)
+                        socketClient.sendall(pickle.dumps({"id": newPlayer.getId(), "key": None}))
+                        gameOver(gameScreen)
                 pygame.display.update()
             else:
                 print("Desconnect from the server!")
