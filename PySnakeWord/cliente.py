@@ -1,13 +1,13 @@
 import pygame
 import socket, pickle
-import select
+
 from snake.model.GameBoard import GameBoard
 from snake.model.Player import Player
 from snake.model.Snake import Snake
 newPlayer = Player()
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
-PORT = 12000        # The port used by the server
+PORT = 15000        # The port used by the server
 
 def drawSnakes(surface, snakes):
     for snake in snakes:
@@ -33,7 +33,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
     #Solicita id para o servidor
     socketClient.sendall(pickle.dumps({"id": newPlayer.getId()}))
     socketClient.settimeout(0.1)
-    #socketClient.setblocking(False)
+
     try:
         serverResponse = socketClient.recv(4096)
         buffer.append(serverResponse)
@@ -67,24 +67,51 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
                 while True:
                     try:
                         serverResponse = socketClient.recv(4096)
-                        buffer.append(serverResponse)
-                        print(len(serverResponse))
-                        print("lock here!!!")
+                        #buffer.append(serverResponse)
+                        #print(len(serverResponse))
+                        break
                     except socket.timeout:
                         break
-                if len(buffer) > 0:
-                    response = pickle.loads(b"".join(buffer))
-                    buffer.clear()
+
+                if serverResponse:
+                    response = pickle.loads(serverResponse)
                     if response["snakeStillInGame"]:
                         gameScreen.fill(Snake.black)
                         drawFoods(gameScreen, response["foods"])
                         drawSnakes(gameScreen, response["snakes"])
+                        pygame.display.update()
                     else:
                         newPlayer.setAlive(False)
                         socketClient.sendall(pickle.dumps({"id": newPlayer.getId(), "key": None}))
                         gameOver(gameScreen)
-                pygame.display.update()
+                        pygame.display.update()
+                        socketClient.close()
+                        waitForUser = True
+                        while waitForUser:
+                            for event in pygame.event.get():
+                                if event.type == pygame.QUIT:
+                                    pygame.quit()
+                                    waitForUser = False
+                # if len(buffer) > 0:
+                #     response = pickle.loads(b"".join(buffer))
+                #     buffer.clear()
+                #     if response["snakeStillInGame"]:
+                #         gameScreen.fill(Snake.black)
+                #         drawFoods(gameScreen, response["foods"])
+                #         drawSnakes(gameScreen, response["snakes"])
+                #         pygame.display.update()
+                #     else:
+                #         newPlayer.setAlive(False)
+                #         socketClient.sendall(pickle.dumps({"id": newPlayer.getId(), "key": None}))
+                #         gameOver(gameScreen)
+                #         pygame.display.update()
+                #         socketClient.close()
+                #         waitForUser = True
+                #         while waitForUser:
+                #             for event in pygame.event.get():
+                #                 if event.type == pygame.QUIT:
+                #                     pygame.quit()
+                #                     waitForUser = False
             else:
                 print("Desconnect from the server!")
 
-pygame.quit()

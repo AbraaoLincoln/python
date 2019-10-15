@@ -58,7 +58,7 @@ class Snake:
     def getSpeedY(self):
         return self.speedY
 
-    def getHaedSnake(self):
+    def getSnakeHaed(self):
         return self.snakeBody[-1]
 
     def move(self):

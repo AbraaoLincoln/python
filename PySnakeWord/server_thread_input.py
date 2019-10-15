@@ -17,7 +17,7 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 15000
+port = 12000
 address = "127.0.0.1"
 
 inputs = []
@@ -55,7 +55,7 @@ def clientInput(clientSocket):
             else:
                 print("enceraa")
                 clientConnect = False
-            print("data lenght:", len(data))
+            # print("data lenght:", len(data))
         except ValueError:
             clientConnect = False
         except OSError:
@@ -87,7 +87,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                 if requireClient["clientData"]["id"] == None:
                     newSnake = Snake()
                     idPlayer = manager.addSnakeInGame(newSnake)
-                    newSnake.drawSnake(gameSurface)
                     requireClient["socketClient"].sendall(pickle.dumps({"id": idPlayer}))
                 else:
                     if requireClient["clientData"]["key"] != None:

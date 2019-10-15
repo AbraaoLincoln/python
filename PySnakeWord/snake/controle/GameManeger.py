@@ -89,7 +89,7 @@ class GameManeger:
     def moveSnakes(self):
         for snake in self.snakeInGame:
             if snake != None:
-                snakeHead = snake.getHaedSnake()
+                snakeHead = snake.getSnakeHaed()
                 if snakeHead[0] > GameBoard.width:
                     snake.throughTheBoard(True, True, None)
                 elif snakeHead[0] < 0:
@@ -102,7 +102,7 @@ class GameManeger:
 
     def moveSnake(self, snakeId):
         snake = self.snakeInGame[snakeId]
-        snakeHead = snake.getHaedSnake()
+        snakeHead = snake.getSnakeHaed()
         if snakeHead[0] > GameBoard.width:
             snake.throughTheBoard(True, True, None)
         elif snakeHead[0] < 0:
@@ -118,17 +118,19 @@ class GameManeger:
     def checksAllSnakeEatFood(self):
         for snake in self.snakeInGame:
             if snake != None:
-                snakeHead = snake.getHaedSnake()
+                snakeHead = snake.getSnakeHaed()
                 for food in self.foodsInGame:
                     foodPosition = food.getFoodPosition()
                     if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
                         snake.increaseSnakeLength()
-                        self.food.generateNewFood()
+                        # self.food.generateNewFood()
+                        self.foodsInGame.remove(food)
+                        #self.addFoodInGame()
                         break
 
     #Verifica se a snake comeu a comida.
     def checkSnakeEatFood(self, snakeId):
-        snakeHead = self.snakeInGame[snakeId].getHaedSnake()
+        snakeHead = self.snakeInGame[snakeId].getSnakeHaed()
         foodPosition = self.food.getFoodPosition()
         if snakeHead[0] == foodPosition[0] and snakeHead[1] == foodPosition[1]:
             self.snakeInGame[snakeId].increaseSnakeLength()
@@ -167,10 +169,29 @@ class GameManeger:
     def snakeDie(self, snakeId):
         snake = self.snakeInGame[snakeId]
         if snake:
-            snakeHead = snake.getHaedSnake()
+            snakeHead = snake.getSnakeHaed()
             snakeBody = snake.getSnake()
             for i in range(len(snakeBody) - 1):
                 if snakeBody[i][0] == snakeHead[0] and snakeBody[i][1] == snakeHead[1]:
                     # self.snakeInGame.remove(snake)
                     self.snakeInGame[snakeId] = None
+                    self.regenateFoodsFromSnake(len(snakeBody))
                     return True
+            for i in range(len(self.snakeInGame)):
+                if i != snakeId:
+                    if self.snakeInGame[i]:
+                        otherSnake = self.snakeInGame[i].getSnake()
+                        for eachPeace in otherSnake:
+                            if eachPeace[0] == snakeHead[0] and eachPeace[1] == snakeHead[1]:
+                                self.snakeInGame[snakeId] = None
+                                self.regenateFoodsFromSnake(len(snakeBody))
+                                return True
+
+    def regenateFoodsFromSnake(self, amount):
+        for i in range(amount):
+            newFood = Food()
+            self.foodsInGame.append(newFood)
+
+    def addFoodInGame(self):
+        newFood = Food()
+        self.foodsInGame.append(newFood)

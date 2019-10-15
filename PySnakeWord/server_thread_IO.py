@@ -17,7 +17,7 @@ gameSurface = pygame.Surface((GameBoard.width, GameBoard.height))
 manager = GameManeger(gameSurface)
 gameSurface.fill((9, 10, 13))
 
-port = 12000
+port = 15000
 address = "127.0.0.1"
 
 mutex = threading.Lock()
@@ -60,6 +60,15 @@ def clientInput(clientSocket):
     activeThreads -= 1
     print("Thread encerrada!")
 
+# def gen_food():
+#     global activeThreads
+#     while True:
+#         if activeThreads > 0:
+#             time.sleep(5)
+#             manager.addFoodInGame()
+#
+# thread_food = threading.Thread(target=gen_food, args=())
+# thread_food.start()
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
     socketServer.setblocking(False)
@@ -80,7 +89,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                     if requireClient["clientData"]["id"] == None:
                         newSnake = Snake()
                         idPlayer = manager.addSnakeInGame(newSnake)
-                        newSnake.drawSnake(gameSurface)
                         requireClient["socketClient"].sendall(pickle.dumps({"id": idPlayer}))
                     else:
                         if requireClient["clientData"]["key"] != None:

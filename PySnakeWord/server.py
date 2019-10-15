@@ -48,7 +48,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
                     if requireClient["id"] == None:
                         newSnake = Snake()
                         idPlayer = manager.addSnakeInGame(newSnake)
-                        newSnake.drawSnake(gameSurface)
                         socks.sendall(pickle.dumps({"id": idPlayer}))
                     else:
                         if requireClient["key"] != None:
