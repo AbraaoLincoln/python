@@ -43,7 +43,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
     if len(buffer) > 0:
         response = pickle.loads(b"".join(buffer))
         buffer.clear()
-    print(response)
+    #print(response)
     newPlayer.setId(response["id"])
 
     if newPlayer.getId() != None:
