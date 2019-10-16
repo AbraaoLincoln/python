@@ -25,11 +25,12 @@ address = "127.0.0.1"
 mutex = threading.Lock()
 updateClients = False
 data = []
-newDataFromClients = False
+newDataFromClients = 0
 requireClient = {}
 activeThreads = 0
 threadsThatAlreadyUpdateClients = 0
-
+buffer = []
+currentBuffer = 0
 doingLogicOfGame = 0
 doingIO = 0
 
@@ -50,7 +51,8 @@ def clientInput(clientSocket):
     global threadsThatAlreadyUpdateClients
     global doingIO
     clientConnect = True
-
+    #hasId = False
+    requireClient_local = []
     while clientConnect:
         try:
             star_time = time.time()
@@ -62,18 +64,24 @@ def clientInput(clientSocket):
                 if requireClient_local["id"] != None and requireClient_local["key"] == None:
                     clientConnect = False
                 mutex.acquire()
-                requireClient = {"socketClient": clientSocket, "clientData": requireClient_local}
-                newDataFromClients = True
+                # requireClient = {"socketClient": clientSocket, "clientData": requireClient_local}
+                # if currentBuffer == 0:
+                #     buffer[0].append({"socketClient": clientSocket, "clientData": requireClient_local})
+                # else:
+                #     buffer[1].append({"socketClient": clientSocket, "clientData": requireClient_local})
+                buffer.append({"socketClient": clientSocket, "clientData": requireClient_local})
+                newDataFromClients += 1
                 mutex.release()
             else:
                 print("No data from client")
                 clientConnect = False
         except BlockingIOError:
+            #print(updateClients)
             if clientConnect and updateClients:
-                star_time = time.time()
+                #star_time = time.time()
                 clientSocket.sendall(pickle.dumps(
                     {"snakes": manager.snakesToSend(), "foods": manager.foodToSend(), "snakeStillInGame": True}))
-                doingIO += (time.time() - star_time)
+                #doingIO += (time.time() - star_time)
                 threadsThatAlreadyUpdateClients += 1
                 time.sleep(0.1)
     activeThreads -= 1
@@ -104,32 +112,42 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketServer:
             t = threading.Thread(target=clientInput, args=([conn]))
             t.start()
             activeThreads += 1
-            print("asdsa")
         except BlockingIOError:
-            if newDataFromClients:
+            time_wainting = time.time()
+            if newDataFromClients > 0:
+                #print("aqui antes")
+                # star_time = time.time()
+                requireClient = buffer[0]
+                print("Client:", requireClient["clientData"]["id"], "send data!")
                 star_time = time.time()
-                if data:
-                    print("Client:", requireClient["clientData"]["id"], "send data!")
-                    if requireClient["clientData"]["id"] == None:
-                        newSnake = Snake()
-                        idPlayer = manager.addSnakeInGame(newSnake)
-                        requireClient["socketClient"].sendall(pickle.dumps({"id": idPlayer}))
-                    else:
-                        if requireClient["clientData"]["key"] != None:
-                            manager.userCommand(requireClient["clientData"]["key"], requireClient["clientData"]["id"])
-                            manager.moveSnakes()
-                            if manager.snakeDie(requireClient["clientData"]["id"]):
-                                requireClient["socketClient"].sendall(pickle.dumps({"snakeStillInGame": False}))
-                            else:
-                                manager.checksAllSnakeEatFood()
+                if requireClient["clientData"]["id"] == None:
+                    newSnake = Snake()
+                    idPlayer = manager.addSnakeInGame(newSnake)
+                    requireClient["socketClient"].sendall(pickle.dumps({"id": idPlayer}))
+                else:
+                    if requireClient["clientData"]["key"] != None:
+                        manager.userCommand(requireClient["clientData"]["key"], requireClient["clientData"]["id"])
+                        manager.moveSnakes()
+                        if manager.snakeDie(requireClient["clientData"]["id"]):
+                            requireClient["socketClient"].sendall(pickle.dumps({"snakeStillInGame": False}))
                         else:
-                            manager.romoveSnakeOnGame(requireClient["clientData"]["id"])
-                            requireClient["socketClient"].close()
-                    updateClients = True
-                    newDataFromClients = False
-                    doingLogicOfGame += (time.time() - star_time)
+                            manager.checksAllSnakeEatFood()
+                    else:
+                        manager.romoveSnakeOnGame(requireClient["clientData"]["id"])
+                        requireClient["socketClient"].close()
+                doingLogicOfGame += (time.time() - star_time)
+                updateClients = True
+                newDataFromClients -= 1
+                del buffer[0]
+            else:
+                doingIO += (time.time() - time_wainting)
+                #manager.moveSnakes()
 
-            if activeThreads == threadsThatAlreadyUpdateClients:
-                threadsThatAlreadyUpdateClients = 0
-                updateClients = False
-
+            if updateClients:
+                star_time = time.time()
+                while True:
+                    if threadsThatAlreadyUpdateClients >= activeThreads:
+                        threadsThatAlreadyUpdateClients = 0
+                        updateClients = False
+                        break
+                doingIO += (time.time() - star_time)

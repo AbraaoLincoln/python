@@ -55,9 +55,9 @@ def clientInput(clientSocket):
         try:
             readable, writable, errs = select.select([clientSocket], [], [])
             for socks in readable:
-                star_time = time.time()
+                #star_time = time.time()
                 data = socks.recv(4096)
-                doingIO += (time.time() - star_time)
+                #doingIO += (time.time() - star_time)
             if data:
                 requireClient_local = pickle.loads(data)
                 #Verifica se o cliente fechou a tela do jogo
@@ -67,7 +67,6 @@ def clientInput(clientSocket):
                 requireClient = {"socketClient": clientSocket, "clientData": requireClient_local}
                 newDataFromClients = True
                 mutex.release()
-                doingIO += (time.time() - star_time)
             else:
                 print("enceraa")
                 clientConnect = False
