@@ -45,7 +45,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketClient:
         buffer.clear()
     #print(response)
     newPlayer.setId(response["id"])
-
+    serverResponse = None
     if newPlayer.getId() != None:
         try:
             pygame.init()
